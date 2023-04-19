@@ -21,10 +21,11 @@ export const App = () => {
   };
 
   useEffect(() => {
-   
+  
     if (searchText) {
-      setIsLoading(true);
+      setIsLoading(true)
       setPage(1);
+     
 
       getImages(searchText, 1)
         .then(data => {
@@ -63,11 +64,7 @@ export const App = () => {
           setError(error);
         });
     }
-  }, [searchText]);
-
-  useEffect(() => {
-    if (page === 1) return;
-    if (searchText) {
+    if (page!==1) {
       setIsLoading(true);
 
       getImages(searchText, page)
@@ -93,15 +90,23 @@ export const App = () => {
               largeImageURL,
             })
           );
-          
+         
             setImages(prev => [...prev, ...imgArr]);
+          
+            
           
         })
         .catch(error => {
           setError(error);
         });
     }
-  }, [page]);
+  }, [searchText,page]);
+
+  // useEffect(() => {
+    
+    
+  // }, [page]);
+
 
   const nextPage = () => {
     setPage(prev => prev + 1);
