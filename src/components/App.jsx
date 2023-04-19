@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import Notiflix from 'notiflix';
 import Button from './Button/Button';
 import Loader from './Loader/Loader';
@@ -7,47 +7,45 @@ import { Container } from './App.styled';
 import { Modal } from './Modal/Modal';
 import { getImages } from './Api/api';
 import { ImageGallery } from './ImageGallery/ImageGallary';
-export class App extends Component {
-  state = {
-    searchText: '',
-    showModal: false,
-    images: [],
-    page: 1,
-    isLoading: false,
-    error: null,
-    per_page: 12,
-    largeImage: null,
+export const App = () => {
+  const [searchText, setSearchText] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [per_page] = useState(12);
+  const [largeImage, setLargeImage] = useState(null);
+  const createSearchText = searchText => {
+    setSearchText(searchText);
   };
 
-  createSearchText = searchText => {
-    this.setState({ searchText });
-  };
-
-
-  componentDidUpdate(prevProps, prevState) {
-    const searchText = this.state.searchText.trim();
-
-    if (prevState.searchText !== searchText && searchText) {
-      this.setState({isLoading:true, page:1})
+  useEffect(() => {
+    setPage(1);
+    if (searchText) {
+      setIsLoading(true);
 
       getImages(searchText, 1)
         .then(data => {
           if (data.totalHits === 0) {
-            this.setState({isLoading: false})
+            setIsLoading(false);
             return Notiflix.Notify.info(
               'Sorry, there are no images matching your search query. Please try again.'
             );
           }
           if (data.totalHits <= 12) {
-            this.setState({isLoading: false})
-            Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+            setIsLoading(false);
+            Notiflix.Notify.info(
+              "We're sorry, but you've reached the end of search results."
+            );
           }
           if (data.status === 'error') {
             return Promise.reject(data.message);
-          }
-          else if (data.totalHits > 0) {
-            this.setState({isLoading: false})
-            Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+          } else if (data.totalHits > 0) {
+            setIsLoading(false);
+            Notiflix.Notify.success(
+              `Hooray! We found ${data.totalHits} images.`
+            );
           }
           const imgArr = data.hits.map(
             ({ id, tags, webformatURL, largeImageURL }) => ({
@@ -57,31 +55,35 @@ export class App extends Component {
               largeImageURL,
             })
           );
-          this.setState({
-            images: imgArr,
-         
-          });
+
+          setImages(imgArr);
         })
         .catch(error => {
-          this.setState({ error });
-        })
+          setError(error);
+        });
     }
+  }, [searchText]);
 
-    if (prevState.page !== this.state.page && this.state.page !== 1) {
-      this.setState({isLoading:true})
-      getImages(searchText, this.state.page)
+  useEffect(() => {
+    if (page === 1) return;
+    if (searchText) {
+      setIsLoading(true);
+
+      getImages(searchText, page)
         .then(data => {
           if (data.totalHits === 0) {
-            this.setState({isLoading: false})
+            setIsLoading(false);
             return Notiflix.Notify.info(
               'Sorry, there are no images matching your search query. Please try again.'
             );
           }
-          if (Math.floor(data.totalHits / this.state.page) < 12) {
-            this.setState({isLoading: false})
-            Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+          if (Math.floor(data.totalHits / page) < 12) {
+            setIsLoading(false);
+            Notiflix.Notify.info(
+              "We're sorry, but you've reached the end of search results."
+            );
           }
-        
+
           const imgArr = data.hits.map(
             ({ id, tags, webformatURL, largeImageURL }) => ({
               id,
@@ -90,58 +92,49 @@ export class App extends Component {
               largeImageURL,
             })
           );
-          this.setState(prevState => ({
-            images: [...prevState.images, ...imgArr],
-        
-          }));
+          if (page !== 1) {
+            setImages(prev => [...prev, ...imgArr]);
+          } else {
+            setImages(imgArr);
+          }
         })
         .catch(error => {
-          this.setState({ error});
-        })
+          setError(error);
+        });
     }
-  }
+  }, [searchText, page]);
 
-  nextPage = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const nextPage = () => {
+    setPage(prev => prev + 1);
+    setIsLoading(true);
   };
 
-  openModal = e => {
+  const openModal = e => {
     const largeImage = e.target.dataset.large;
 
     if (e.target.nodeName === 'IMG') {
-      this.setState(({ showModal }) => ({
-        showModal: !showModal,
-        largeImage: largeImage,
-      }));
+      setShowModal(true);
+      setLargeImage(largeImage);
     }
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  const toggleModal = () => {
+    setShowModal(false);
   };
-  onButtonVisible = () => {
-    if (
-      this.state.images &&
-      this.state.images.length < Number(this.state.page * this.state.per_page)
-    ) {
+  const onButtonVisible = () => {
+    if (images && images.length < Number(page * per_page)) {
       return false;
     } else return true;
   };
-  render() {
-    const { showModal, images, largeImage, isLoading, error } = this.state;
-    return (
-      <Container>
-        <Searchbar onSubmit={this.createSearchText} />
-        {isLoading && <Loader />}
-        {error && `${error}`}
-        {images && <ImageGallery images={images} openModal={this.openModal} />}
-        {  this.onButtonVisible() && <Button nextPage={this.nextPage} />}
-        {showModal && (
-          <Modal onClose={this.toggleModal} largeImage={largeImage} />
-        )}
-      </Container>
-    );
-  }
-}
+
+  return (
+    <Container>
+      <Searchbar onSubmit={createSearchText} />
+      {isLoading && <Loader />}
+      {error && `${error}`}
+      {images && <ImageGallery images={images} openModal={openModal} />}
+      {onButtonVisible() && <Button nextPage={nextPage} />}
+      {showModal && <Modal onClose={toggleModal} largeImage={largeImage} />}
+    </Container>
+  );
+};

@@ -1,28 +1,27 @@
-import React, { Component } from 'react';
+
 import Notiflix from 'notiflix';
 import css from './Searchbar.module.css';
 import PropTypes from 'prop-types';
-export class Searchbar extends Component {
-  state = {
-    value: '',
-  };
+import { useState } from 'react';
+export const Searchbar =({onSubmit})=> {
+const [value , setValue] = useState('')
 
-  handleChange = e => {
-    this.setState({ value:e.currentTarget.value.toLowerCase() });
-  };
+  const handleChange = e => {
+   setValue(e.currentTarget.value.trim())
+  }
 
-  handleSubmit = e => {
+  const handleSubmit = e => {
     e.preventDefault();
-    if(this.state.value.trim() === ''){
+    if(value.trim() === ''){
       return  Notiflix.Notify.failure("Request cannot be empty. Please enter a value!")
     }
-  this.props.onSubmit(this.state.value.trim())
-  this.setState({ value: '' });
+onSubmit(value.trim())
+  setValue('');
   };
-  render() {
+
     return (
       <header className={css.searchbar}>
-        <form className={css.form} onSubmit={this.handleSubmit}>
+        <form className={css.form} onSubmit={handleSubmit}>
           <button type="submit" className={css.button}>
             <span className={css.span}>Search</span>
           </button>
@@ -34,13 +33,13 @@ export class Searchbar extends Component {
             autoFocus
          
             placeholder="Search images and photos"
-            onChange={this.handleChange}
-            value={this.state.value}
+            onChange={handleChange}
+            value={value}
           />
         </form>
       </header>
     );
-  }
+  
 }
 
 Searchbar.propTypes = {
