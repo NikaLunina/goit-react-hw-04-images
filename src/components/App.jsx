@@ -64,6 +64,10 @@ export const App = () => {
           setError(error);
         });
     }
+  }, [searchText]);
+
+  useEffect(() => {
+    
     if (page!==1) {
       setIsLoading(true);
 
@@ -90,8 +94,12 @@ export const App = () => {
               largeImageURL,
             })
           );
-         
+          if (page !== 1) {
             setImages(prev => [...prev, ...imgArr]);
+          } else {
+            setImages(imgArr);
+          }
+            
           
             
           
@@ -100,12 +108,7 @@ export const App = () => {
           setError(error);
         });
     }
-  }, [searchText,page]);
-
-  // useEffect(() => {
-    
-    
-  // }, [page]);
+  }, [page]);
 
 
   const nextPage = () => {
