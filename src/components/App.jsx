@@ -16,16 +16,14 @@ export const App = () => {
   const [error, setError] = useState(null);
   const [per_page] = useState(12);
   const [largeImage, setLargeImage] = useState(null);
-  const createSearchText = searchText => {
-    setSearchText(searchText);
+  const createSearchText = search => {
+    setSearchText(search);
+    setPage(1);
   };
 
   useEffect(() => {
-  
     if (searchText) {
-      setIsLoading(true)
-      setPage(1);
-     
+      setIsLoading(true);
 
       getImages(searchText, 1)
         .then(data => {
@@ -67,8 +65,7 @@ export const App = () => {
   }, [searchText]);
 
   useEffect(() => {
-    
-    if (page!==1) {
+    if (page !== 1) {
       setIsLoading(true);
 
       getImages(searchText, page)
@@ -94,22 +91,14 @@ export const App = () => {
               largeImageURL,
             })
           );
-          if (page !== 1) {
-            setImages(prev => [...prev, ...imgArr]);
-          } else {
-            setImages(imgArr);
-          }
-            
-          
-            
-          
+
+          setImages(prev => [...prev, ...imgArr]);
         })
         .catch(error => {
           setError(error);
         });
     }
-  }, [page]);
-
+  }, [page, searchText]);
 
   const nextPage = () => {
     setPage(prev => prev + 1);
